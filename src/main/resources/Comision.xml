@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 1. En el panel principal (raíz) le decimos qué clase Java lo controla -->
+<VBox xmlns="http://javafx.com/javafx/20"
+    xmlns:fx="http://javafx.com/fxml/1" fx:controller="ComisionController" spacing="10" alignment="CENTER">
+
+    <!-- 2. fx:id es el nombre de la variable con la que lo llamaremos en Java -->
+    <TextField fx:id="campoCliente" promptText="Nombre del cliente" />
+    <DatePicker fx:id="selectorFecha" />
+
+    <!-- 3. onAction vincula el clic del botón al nombre de un método en el controlador -->
+    <Button text="Guardar Comisión" onAction="#guardarComision" />
+
+</VBox>

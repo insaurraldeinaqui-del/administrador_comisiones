@@ -1,0 +1,11 @@
+[ {
+  "id" : "C001",
+  "cliente" : "pepito",
+  "titulo" : "chibi half body full color",
+  "precioTotal" : 2400.0,
+  "pagado" : 2400.0,
+  "estado" : "COMPLETA",
+  "fechaLimite" : "2026-08-03",
+  "pagada" : true,
+  "porcentajeProgreso" : 100.0
+} ]
