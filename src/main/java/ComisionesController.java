@@ -5,8 +5,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -27,6 +29,9 @@ public class ComisionesController {
 
     @FXML
     private TextField campoPrecio;
+
+    @FXML
+    private ComboBox<Comision.Divisa> selectorDivisa;
 
     @FXML
     private DatePicker selectorFecha;
@@ -58,6 +63,9 @@ public class ComisionesController {
     private TableColumn<Comision, String> colTitulo;
 
     @FXML
+    private TableColumn<Comision, Comision.Divisa> colDivisa;
+
+    @FXML
     private TableColumn<Comision, Double> colPrecio;
 
     @FXML
@@ -82,6 +90,7 @@ public class ComisionesController {
     @FXML
     public void initialize() {
         configurarColumnas();
+        configurarSelectorDivisa();
 
         List<Comision> guardadas = repositorio.cargarComisiones();
         listaComisiones.setAll(guardadas);
@@ -90,41 +99,49 @@ public class ComisionesController {
         inicializarContadorId();
     }
 
+    private void configurarSelectorDivisa() {
+        selectorDivisa.setItems(FXCollections.observableArrayList(Comision.Divisa.values()));
+        selectorDivisa.setValue(Comision.Divisa.ARS);
+    }
+
     private void configurarColumnas() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colCliente.setCellValueFactory(new PropertyValueFactory<>("cliente"));
         colTitulo.setCellValueFactory(new PropertyValueFactory<>("titulo"));
+        colDivisa.setCellValueFactory(new PropertyValueFactory<>("divisa"));
         colPrecio.setCellValueFactory(new PropertyValueFactory<>("precioTotal"));
         colPagado.setCellValueFactory(new PropertyValueFactory<>("pagado"));
         colProgreso.setCellValueFactory(new PropertyValueFactory<>("porcentajeProgreso"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colFecha.setCellValueFactory(new PropertyValueFactory<>("fechaLimite"));
 
-        colPrecio.setCellFactory(col -> formatoMoneda());
-        colPagado.setCellFactory(col -> formatoMoneda());
-        colProgreso.setCellFactory(col -> formatoPorcentaje());
+        // Estas dos columnas necesitan saber la divisa de SU fila para mostrar el símbolo correcto.
+        colPrecio.setCellFactory(col -> new CeldaMontoConDivisa());
+        colPagado.setCellFactory(col -> new CeldaMontoConDivisa());
+        colProgreso.setCellFactory(col -> new CeldaPorcentaje());
     }
 
-    private TableCellDouble formatoMoneda() {
-        return new TableCellDouble(valor -> String.format("$%.2f", valor));
-    }
-
-    private TableCellDouble formatoPorcentaje() {
-        return new TableCellDouble(valor -> String.format("%.0f%%", valor));
-    }
-
-    // Celda genérica para formatear columnas de tipo Double sin repetir código.
-    private static class TableCellDouble extends javafx.scene.control.TableCell<Comision, Double> {
-        private final java.util.function.Function<Double, String> formateador;
-
-        TableCellDouble(java.util.function.Function<Double, String> formateador) {
-            this.formateador = formateador;
-        }
-
+    // Celda que muestra un monto con el símbolo de la divisa de esa fila (ej: "US$150.00").
+    private static class CeldaMontoConDivisa extends TableCell<Comision, Double> {
         @Override
         protected void updateItem(Double valor, boolean vacio) {
             super.updateItem(valor, vacio);
-            setText(vacio || valor == null ? null : formateador.apply(valor));
+            if (vacio || valor == null) {
+                setText(null);
+                return;
+            }
+            Comision fila = (getTableRow() != null) ? getTableRow().getItem() : null;
+            String simbolo = (fila != null && fila.getDivisa() != null) ? fila.getDivisa().getSimbolo() : "";
+            setText(simbolo + String.format("%.2f", valor));
+        }
+    }
+
+    // Celda para la columna de progreso, como porcentaje simple.
+    private static class CeldaPorcentaje extends TableCell<Comision, Double> {
+        @Override
+        protected void updateItem(Double valor, boolean vacio) {
+            super.updateItem(valor, vacio);
+            setText(vacio || valor == null ? null : String.format("%.0f%%", valor));
         }
     }
 
@@ -162,8 +179,13 @@ public class ComisionesController {
             return;
         }
 
+        Comision.Divisa divisaSeleccionada = selectorDivisa.getValue();
+        if (divisaSeleccionada == null) {
+            divisaSeleccionada = Comision.Divisa.ARS;
+        }
+
         String id = "C" + String.format("%03d", contadorId++);
-        Comision nueva = new Comision(id, cliente.trim(), titulo.trim(), precio);
+        Comision nueva = new Comision(id, cliente.trim(), titulo.trim(), precio, divisaSeleccionada);
         if (fechaLimite != null) {
             nueva.setFechaLimite(fechaLimite);
         }
@@ -171,7 +193,7 @@ public class ComisionesController {
         listaComisiones.add(nueva);
         repositorio.guardarComisiones(listaComisiones);
 
-        mostrarMensaje("Comisión " + id + " creada para " + cliente + ".");
+        mostrarMensaje("Comisión " + id + " creada para " + cliente + " (" + divisaSeleccionada + ").");
         limpiarFormularioAlta();
     }
 
@@ -244,6 +266,8 @@ public class ComisionesController {
         mostrarMensaje("Comisión de " + seleccionada.getCliente() + " eliminada.");
     }
 
+    // Nota: no reseteamos la divisa al limpiar el formulario, así queda seleccionada
+    // la última usada por si el artista está cargando varias comisiones en la misma moneda.
     private void limpiarFormularioAlta() {
         campoCliente.clear();
         campoTitulo.clear();

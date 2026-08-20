@@ -10,6 +10,7 @@ public class Comision {
     private double pagado;
     private EstadoComision estado;
     private LocalDate fechaLimite;
+    private Divisa divisa;
 
     // Enumeración para los estados
     public enum EstadoComision {
@@ -19,15 +20,46 @@ public class Comision {
         COMPLETA
     }
 
+    // Enumeración para las divisas. Fácil de ampliar si hace falta otra moneda.
+    public enum Divisa {
+        ARS("Pesos argentinos", "$"),
+        USD("Dólares", "US$"),
+        EUR("Euros", "€");
+
+        private final String nombre;
+        private final String simbolo;
+
+        Divisa(String nombre, String simbolo) {
+            this.nombre = nombre;
+            this.simbolo = simbolo;
+        }
+
+        public String getSimbolo() {
+            return simbolo;
+        }
+
+        // Se usa para mostrar el nombre legible en el ComboBox y en la tabla.
+        @Override
+        public String toString() {
+            return nombre;
+        }
+    }
+
     // 1. Constructor Vacío (OBLIGATORIO para Jackson)
     public Comision() {
         this.estado = EstadoComision.PENDIENTE;
         this.pagado = 0.0;
         this.fechaLimite = LocalDate.now().plusMonths(1);
+        this.divisa = Divisa.ARS;
     }
 
-    // 2. Constructor con argumentos
+    // 2. Constructor con argumentos, usa ARS por defecto
     public Comision(String id, String cliente, String titulo, double precioTotal) {
+        this(id, cliente, titulo, precioTotal, Divisa.ARS);
+    }
+
+    // 3. Constructor con divisa explícita
+    public Comision(String id, String cliente, String titulo, double precioTotal, Divisa divisa) {
         this.id = id;
         this.cliente = cliente;
         this.titulo = titulo;
@@ -35,6 +67,7 @@ public class Comision {
         this.estado = EstadoComision.PENDIENTE;
         this.pagado = 0.0;
         this.fechaLimite = LocalDate.now().plusMonths(1);
+        this.divisa = (divisa != null) ? divisa : Divisa.ARS;
     }
 
     // Método para calcular progreso (calculado, no se guarda en el JSON)
@@ -132,5 +165,13 @@ public class Comision {
 
     public void setFechaLimite(LocalDate fechaLimite) {
         this.fechaLimite = fechaLimite;
+    }
+
+    public Divisa getDivisa() {
+        return divisa;
+    }
+
+    public void setDivisa(Divisa divisa) {
+        this.divisa = divisa;
     }
 }
