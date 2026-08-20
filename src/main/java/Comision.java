@@ -1,3 +1,5 @@
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.LocalDate;
 
 public class Comision {
@@ -35,14 +37,16 @@ public class Comision {
         this.fechaLimite = LocalDate.now().plusMonths(1);
     }
 
-    // Método para calcular progreso
+    // Método para calcular progreso (calculado, no se guarda en el JSON)
+    @JsonIgnore
     public double getPorcentajeProgreso() {
         if (precioTotal == 0)
             return 0;
         return (pagado / precioTotal) * 100;
     }
 
-    // Método para verificar si está completamente pagada
+    // Método para verificar si está completamente pagada (calculado, no se guarda en el JSON)
+    @JsonIgnore
     public boolean isPagada() {
         return Math.abs(pagado - precioTotal) < 0.01 || pagado > precioTotal;
     }

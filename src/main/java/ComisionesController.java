@@ -1,7 +1,10 @@
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -11,6 +14,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public class ComisionesController {
 
@@ -36,6 +40,9 @@ public class ComisionesController {
 
     @FXML
     private Button botonMarcarEntregada;
+
+    @FXML
+    private Button botonEliminar;
 
     // --- Tabla ---
     @FXML
@@ -208,6 +215,33 @@ public class ComisionesController {
         repositorio.guardarComisiones(listaComisiones);
 
         mostrarMensaje("Comisión de " + seleccionada.getCliente() + " marcada como completa.");
+    }
+
+    // Elimina la comisión seleccionada, previa confirmación del usuario.
+    // Pensado para sacar de la lista comisiones canceladas o ya completadas.
+    @FXML
+    public void eliminarComision() {
+        Comision seleccionada = tablaComisiones.getSelectionModel().getSelectedItem();
+        if (seleccionada == null) {
+            mostrarError("Seleccioná una comisión de la tabla primero.");
+            return;
+        }
+
+        Alert confirmacion = new Alert(AlertType.CONFIRMATION);
+        confirmacion.setTitle("Eliminar comisión");
+        confirmacion.setHeaderText(null);
+        confirmacion.setContentText("¿Eliminar la comisión de \"" + seleccionada.getCliente()
+                + "\" (" + seleccionada.getTitulo() + ")? Esta acción no se puede deshacer.");
+
+        Optional<ButtonType> respuesta = confirmacion.showAndWait();
+        if (respuesta.isEmpty() || respuesta.get() != ButtonType.OK) {
+            return;
+        }
+
+        listaComisiones.remove(seleccionada);
+        repositorio.guardarComisiones(listaComisiones);
+
+        mostrarMensaje("Comisión de " + seleccionada.getCliente() + " eliminada.");
     }
 
     private void limpiarFormularioAlta() {

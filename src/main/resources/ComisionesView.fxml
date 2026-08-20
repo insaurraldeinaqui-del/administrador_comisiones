@@ -68,6 +68,8 @@
             <TextField fx:id="campoPago" promptText="Monto" prefWidth="90"/>
             <Button fx:id="botonRegistrarPago" text="Registrar pago" onAction="#registrarPago"/>
             <Button fx:id="botonMarcarEntregada" text="Marcar entregada" onAction="#marcarEntregada"/>
+            <Button fx:id="botonEliminar" text="Eliminar" onAction="#eliminarComision"
+                    style="-fx-text-fill: #c62828;"/>
         </HBox>
     </bottom>
 
